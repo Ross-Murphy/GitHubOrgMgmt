@@ -1,12 +1,12 @@
 import os
 import yaml
+import argparse
 
 from github import Github
 from github import Auth
 from github import GithubIntegration
 from common import RepoObject, discover_repository
 
-ORG_NAME = 'sait-ca'
 ACCESS_TOKEN = os.getenv("GITHUB_PRIVATE_TOKEN") # Read GitHub Personal Access Token (PAT) as an ENV Var
 '''
 use a bash script like this to set the PAT or do it some other way.
@@ -15,12 +15,30 @@ read -s -p "GitHub Access Token:" GITHUB_PRIVATE_TOKEN
 export GITHUB_PRIVATE_TOKEN
 '''
 
+parser = argparse.ArgumentParser(
+                    prog='GitHub Org discovery',
+                    description='Crawls a GitHub Organizations repositories and gets their collaborators and team access as yaml',
+                    epilog='')
+
+parser.add_argument('-r','--repo', required=True, help='Name of repository to inspect. Use "--repo all" for all repos.')
+parser.add_argument('-o','--org', help='Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME')
+parser.add_argument('-a','--action', choices=['print', 'write'], default='print', help='print yaml to stdout or write to a file specified')
+parser.add_argument('-f','--file', default='stdout.yml', help='File name to write yaml output')
+args = parser.parse_args()
+
+repo_name = args.repo
+
+if args.org:
+    ORG_NAME =  args.org
+else: 
+    ORG_NAME = os.getenv("GITHUB_ORG_NAME") # Read GitHub Org Name ENV Var GITHUB_ORG_NAME
+
 if not ACCESS_TOKEN: 
-    print("Exiting: GITHUB_PRIVATE_TOKEN not defined")
+    print("Exiting: GITHUB_PRIVATE_TOKEN empty or not defined. Set as ENV var GITHUB_PRIVATE_TOKEN")
     exit()
 
 if not ORG_NAME: 
-    print("Exiting: ORG_NAME not defined")
+    print("Exiting: GitHub Orgnaization Name not set. Set as ENV var GITHUB_ORG_NAME or use arg --org <GH-ORG-NAME>")
     exit()
 
 # using an access token
@@ -36,11 +54,18 @@ g = Github(auth=auth)
 # for repo in g.get_user().get_repos():
 #     print(repo.name)
 
-for repo in g.get_organization(ORG_NAME).get_repos(type='all', sort='pushed'):
-    #if str(repo.name) == 'EnterpriseMonitoring':
-    if str(repo.name) == 'Standing_Session':    
+if repo_name == 'all':
+    for repo in g.get_organization(ORG_NAME).get_repos(type='all', sort='pushed'):
+        #if str(repo.name) == 'EnterpriseMonitoring':
+        if str(repo.name) == 'Standing_Session':    
+            this_repo = discover_repository(repo)
+            print(this_repo.get_repo_as_yaml())
+else:
+    repo = g.get_organization(ORG_NAME).get_repo(name=repo_name)
+    if repo:
         this_repo = discover_repository(repo)
         print(this_repo.get_repo_as_yaml())
+
 
 # To close connections after use
 g.close()
