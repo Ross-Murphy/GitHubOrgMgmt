@@ -95,6 +95,70 @@ class RepoObject:
         '''
         return yaml.safe_dump(self.get_repo_structure(), sort_keys=False)
 
+class TeamObject:
+    '''
+    Class for representing a GitHub Team membership as yaml.     
+        TeamObj Structure {
+            team.slug: {
+                "name": str(self.name),
+                "description": str(self.description),
+                "html_url": str(self.html_url),
+                "id": int(self.id),
+                "parent": str(self.parent),               
+                "members": list(self.members)
+            }
+        }    
+    '''
+    
+    def __init__(self, slug) -> None:
+        self.slug:str = slug
+        self.name:str = None
+        self.id: int = 0
+        self.html_url:str =  None
+        self.description:str = None
+        self.parent:str = None
+        self.members:set = set()
+
+    def add_member(self, login):
+        self.members.add(login)
+
+    def remove_member(self, login):
+        self.members.difference(login)
+
+    def get_team_structure(self) -> dict:
+        '''
+        Returns a team object which is a dict of lists, strings and int for id.
+        Interally the class uses set() for the lists to prevent duplicates
+        However when exported they are converted to simple list() "arrays" for yaml etc.
+        '''
+        return {
+            self.slug: {
+                "name": str(self.name),
+                "description": str(self.description),
+                "html_url": str(self.html_url),
+                "id": int(self.id),
+                "parent": str(self.parent),               
+                "members": list(self.members)
+            }
+        }
+    def get_team_as_yaml(self) -> str:
+        '''
+        Returns team object as a yaml formated string.      
+        '''
+        return yaml.safe_dump(self.get_team_structure(), sort_keys=False)
+
+
+def discover_team(team)-> TeamObject:
+    this_team = TeamObject(slug=team.slug)
+    this_team.name = team.name
+    this_team.parent = team.parent
+    this_team.description = team.description
+    this_team.id = team.id
+    this_team.html_url = team.html_url
+    for member in team.get_members():
+        this_team.add_member(member.login)
+
+    return this_team
 
 def discover_repository(repo) ->RepoObject:
     this_repo = RepoObject(name=repo.name)
