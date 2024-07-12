@@ -104,7 +104,8 @@ class TeamObject:
                 "description": str(self.description),
                 "html_url": str(self.html_url),
                 "id": int(self.id),
-                "parent": str(self.parent),               
+                "parent_id": str(self.parent.id),
+                "parent_name": str(self.parent.name),                               
                 "members": list(self.members)
             }
         }    
@@ -116,8 +117,10 @@ class TeamObject:
         self.id: int = 0
         self.html_url:str =  None
         self.description:str = None
-        self.parent:str = None
+        self.parent_id:int = 0
+        self.parent_name:str = None
         self.members:set = set()
+
 
     def add_member(self, login):
         self.members.add(login)
@@ -137,7 +140,8 @@ class TeamObject:
                 "description": str(self.description),
                 "html_url": str(self.html_url),
                 "id": int(self.id),
-                "parent": str(self.parent),               
+                "parent_id": int(self.parent_id),
+                "parent_name": str(self.parent_name),                               
                 "members": list(self.members)
             }
         }
@@ -151,10 +155,12 @@ class TeamObject:
 def discover_team(team)-> TeamObject:
     this_team = TeamObject(slug=team.slug)
     this_team.name = team.name
-    this_team.parent = team.parent
     this_team.description = team.description
     this_team.id = team.id
     this_team.html_url = team.html_url
+    if team.parent:
+        this_team.parent_id = team.parent.id
+        this_team.parent_name = team.parent.name
     for member in team.get_members():
         this_team.add_member(member.login)
 
