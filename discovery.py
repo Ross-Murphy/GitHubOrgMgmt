@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import argparse
 
@@ -16,7 +17,7 @@ export GITHUB_PRIVATE_TOKEN
 '''
 
 parser = argparse.ArgumentParser(
-                    prog='GitHub Org discovery',
+                    prog=os.path.basename(sys.argv[0]),
                     description='Crawls a GitHub Organizations repositories and gets their collaborators and team access as yaml',
                     epilog='')
 
