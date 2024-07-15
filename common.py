@@ -1,6 +1,21 @@
 import yaml
 import github
 
+class IndentDumper(yaml.Dumper):
+    '''
+    This fixes pyyaml yaml.dump indentation
+    By default, PyYAML indent list items on the same level as their parent.
+    This will cause lots of linters to fail.
+    See here : https://reorx.com/blog/python-yaml-tips/
+    Note that Dumper cannot be passed to yaml.safe_dump which has its owner dumper class defined.
+    yaml.safe_dump() is recommended when you need to ensure security and avoid the risk of arbitrary code execution 
+    when dealing with data from untrusted sources. 
+    Use yaml.dump() when you need to serialize complex or custom Python objects and are confident that the data being serialized is safe.
+    '''
+    def increase_indent(self, flow=False, indentless=False):
+        return super(IndentDumper, self).increase_indent(flow, False)
+
+
 class RepoObject:
     '''
     Class for representing a GitHub repo as yaml or as a python dict
@@ -113,7 +128,7 @@ class RepoObject:
         '''
         Returns repo object as a yaml formated string.      
         '''
-        return yaml.safe_dump(self.get_repo_structure(), sort_keys=False)
+        return yaml.dump(self.get_repo_structure(), sort_keys=False, Dumper=IndentDumper)
 
 class TeamObject:
     '''
@@ -169,7 +184,7 @@ class TeamObject:
         '''
         Returns team object as a yaml formated string.      
         '''
-        return yaml.safe_dump(self.get_team_structure(), sort_keys=False)
+        return yaml.dump(self.get_team_structure(), sort_keys=False, Dumper=IndentDumper)
 
 
 def discover_team(team)-> TeamObject:
@@ -213,7 +228,8 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
             this_repo.add_team(team.slug, 'triage')
         elif perm.pull == True:
             this_repo.add_team(team.slug, 'read')
-    if discover_contributors:
+
+    if discover_contributors: # Complete discovery was requested
         branches = repo.get_branches()
         authors = set()
         for branch in branches:
