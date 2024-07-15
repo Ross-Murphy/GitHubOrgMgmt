@@ -80,9 +80,10 @@ AwesomeRepo: # Name of Repository
 
  ```
 
-
+Discover team
 `python discovery.py -t team-awesome`
 
+Output
 ```yaml
 team-awesome: # team slug name
   name: Team Awesome # Team name
@@ -99,6 +100,8 @@ team-awesome: # team slug name
   - SomeoneElseAwesome
 ```
 
-### Interacting with GitHub API via Python
+### More Reading
+
+#### Interacting with GitHub API via Python
 PyGithub Docs : https://pygithub.readthedocs.io/en/stable/reference.html
 
