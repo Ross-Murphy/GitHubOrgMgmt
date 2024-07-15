@@ -23,7 +23,7 @@ pip install pygithub, pyyaml, argparse
 
 ```
 python discovery.py --help
-usage: discovery.py [-h] [-r REPO] [-t TEAMSLUG] [-o ORG] [-a {print,write}] [-f FILE]
+usage: discovery.py [-h] [-r REPO] [-t TEAMSLUG] [-o ORG] [-a {print,write}] [-f FILE] [-c]
 
 Crawls a GitHub Organizations repositories and gets their collaborators and team access as yaml
 
@@ -36,8 +36,49 @@ optional arguments:
   -a {print,write}, --action {print,write}
                         print yaml to stdout or write to a file specified
   -f FILE, --file FILE  File name to write yaml output
+  -c, --complete        Complete. Crawl commits to discover who has commited to repo on any branch
 ```
 
+### Sample usage and output
+```
+# Setup your org an GitHub PAT
+GitHub Organization Name:our-org
+GitHub Access Token:****************************
+
+# run discovery
+python discovery.py -r AwesomeRepo
+```
+Output
+```yaml
+AwesomeRepo: # Name of Repository
+  description: This is our awesome GitHub Repo
+  html_url: https://github.com/our-org/AwesomeRepo
+  direct_collabs: # All explicitly defined collaborators (affilation=direct) sorted by role.  
+    write: # Built-in Roles are admin, maintain, write, triage and read.
+    - DevDude76
+    - CodeGal99
+    read:
+    - RadProjectMgr
+  outside_collabs: # direct collaborators who are outside the organization membership
+    write:
+    - DevDude76
+    read:
+    - RadProjectMgr
+  teams: # Teams with explicit access. Built-in Roles are admin, maintain, write, triage and read.
+    write:
+    - team-awesome # team 'slug' is used here rather than the team name
+    - team-okay-i-guess
+    read:
+    - code-users
+
+  contributors: # This is a historic record of who has commited code to any branch. Not Used for setting values in GH
+    - CodeGal99
+    - DevDude76  
+    - AwesomeTeamGuy6 # A commit was found made by a team or org member
+    - SomeRetiredBozo # A commit was found made by User who may no longer be a collab or in a team.
+    - ExpiredContractor # A commit was found made by User who may no longer be a collab or in a team.
+
+ ```
 
 ### Interacting with GitHub API via Python
 PyGithub Docs : https://pygithub.readthedocs.io/en/stable/reference.html
