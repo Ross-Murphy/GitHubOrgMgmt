@@ -80,6 +80,25 @@ AwesomeRepo: # Name of Repository
 
  ```
 
+
+`python discovery.py -t team-awesome`
+
+```yaml
+team-awesome: # team slug name
+  name: Team Awesome # Team name
+  description: An Awesome Infrastruture team
+  html_url: https://github.com/orgs/our-org/teams/team-awesome # URL to the team page
+  id: 654321 # GitHub Team ID
+  parent_id: 123456 # Id of parent team if exists else = '0'
+  parent_name: ParentTeamName # Parent Team Name
+  members: # List of team members
+  - TeamLead
+  - AwesomeTeamGuy6
+  - AwesomeTeamMember
+  - AwesomeTeamDev
+  - SomeoneElseAwesome
+```
+
 ### Interacting with GitHub API via Python
 PyGithub Docs : https://pygithub.readthedocs.io/en/stable/reference.html
 
