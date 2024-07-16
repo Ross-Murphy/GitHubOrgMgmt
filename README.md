@@ -53,6 +53,7 @@ Output
 AwesomeRepo: # Name of Repository
   description: This is our awesome GitHub Repo
   html_url: https://github.com/our-org/AwesomeRepo
+  type: repo
   direct_collabs: # All explicitly defined collaborators (affilation=direct) sorted by role.  
     write: # Built-in Roles are admin, maintain, write, triage and read.
     - DevDude76
@@ -88,6 +89,7 @@ Output
 team-awesome: # team slug name
   name: Team Awesome # Team name
   description: An Awesome Infrastruture team
+  type: team
   html_url: https://github.com/orgs/our-org/teams/team-awesome # URL to the team page
   id: 654321 # GitHub Team ID
   parent_id: 123456 # Id of parent team if exists else = '0'

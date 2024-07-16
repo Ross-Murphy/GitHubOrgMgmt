@@ -107,10 +107,6 @@ if discover_members:
             file_output += org_yaml
         print(org_yaml, end='')
         
-    # member_list = org.get_members()
-    # outside_collaborators = org.get_outside_collaborators()
-    # invitations = org.invitations()
-
 
 if print_yaml_doc:
     f = open(output_file, "a")
