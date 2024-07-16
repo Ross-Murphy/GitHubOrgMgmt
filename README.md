@@ -42,7 +42,7 @@ optional arguments:
 
 ### Sample usage and output
 ```
-# Setup your org an GitHub PAT
+# Setup your org and GitHub PAT
 GitHub Organization Name:our-org
 GitHub Access Token:****************************
 
@@ -57,21 +57,21 @@ AwesomeRepo: # Name of Repository
   type: repo
   direct_collabs: # All explicitly defined collaborators (affilation=direct) sorted by role.  
     write: # Built-in Roles are admin, maintain, write, triage and read.
-    - DevDude76
-    - CodeGal99
+      - DevDude76
+      - CodeGal99
     read:
-    - RadProjectMgr
+      - RadProjectMgr
   outside_collabs: # direct collaborators who are outside the organization membership
     write:
-    - DevDude76
+      - DevDude76
     read:
-    - RadProjectMgr
+      - RadProjectMgr
   teams: # Teams with explicit access. Built-in Roles are admin, maintain, write, triage and read.
     write:
-    - team-awesome # team 'slug' is used here rather than the team name
-    - team-okay-i-guess
+      - team-awesome # team 'slug' is used here rather than the team name
+      - team-okay-i-guess
     read:
-    - code-users
+      - code-users
 
   contributors: # This is a historic record of who has commited code to any branch. Not Used for setting values in GH
     - CodeGal99
@@ -96,11 +96,13 @@ team-awesome: # team slug name
   parent_id: 123456 # Id of parent team if exists else = '0'
   parent_name: ParentTeamName # Parent Team Name
   members: # List of team members
-  - TeamLead
-  - AwesomeTeamGuy6
-  - AwesomeTeamMember
-  - AwesomeTeamDev
-  - SomeoneElseAwesome
+    maintainer:
+      - TeamLead
+    member:  
+      - AwesomeTeamGuy6
+      - AwesomeTeamMember
+      - AwesomeTeamDev
+      - SomeoneElseAwesome
 ```
 Discover Organization Membership
 the -m flag can be added to output the Org membership broken down by Members, Collaborators and pending invites

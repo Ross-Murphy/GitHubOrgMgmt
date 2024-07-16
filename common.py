@@ -159,11 +159,18 @@ class TeamObject:
         self.description:str = None
         self.parent_id:int = 0
         self.parent_name:str = None
-        self.members:set = set()
+        self.members:dict = {}
 
 
-    def add_member(self, login)-> None:
-        self.members.add(login)
+    def add_member(self, login: str, role: str = 'member')-> None:
+#        self.members.add(login)
+        if role in self.members.keys():
+            current_members = set(self.members[role]) # convert list to set to avoid duplicates
+            current_members.add(login)
+            self.members[role] = list(current_members) # Convert set back to list for yaml export
+        else:
+            self.members[role] = list()   
+            self.members[role].append(login)
 
     def remove_member(self, login)-> None:
         self.members.difference(login)
@@ -183,7 +190,7 @@ class TeamObject:
                 "id": int(self.id),
                 "parent_id": int(self.parent_id),
                 "parent_name": str(self.parent_name),                               
-                "members": list(self.members)
+                "members": self.members
             }
         }
     def get_team_as_yaml(self) -> str:
@@ -280,8 +287,11 @@ def discover_team(team:github.Team.Team)-> TeamObject:
     if team.parent:
         this_team.parent_id = team.parent.id
         this_team.parent_name = team.parent.name
-    for member in team.get_members():
-        this_team.add_member(member.login)
+    for member in team.get_members(role='maintainer'):
+        this_team.add_member(member.login, role='maintainer')
+
+    for member in team.get_members(role='member'):
+        this_team.add_member(member.login, role='member')
 
     return this_team
 
