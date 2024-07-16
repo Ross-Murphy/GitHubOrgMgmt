@@ -55,6 +55,7 @@ class RepoObject:
     def __init__(self, name) -> None:
         self.name: str = name
         self.description: str = None
+        self.type: str = 'repo'
         self.html_url: str = None
         self.direct_collabs: dict = {}
         self.outside_collabs: dict = {}
@@ -118,6 +119,7 @@ class RepoObject:
             self.name: {
                 "description": str(self.description),
                 "html_url": str(self.html_url),
+                "type": str(self.type),
                 "direct_collabs": self.direct_collabs,
                 "outside_collabs": self.outside_collabs,
                 "teams": self.teams,
@@ -151,6 +153,7 @@ class TeamObject:
     def __init__(self, slug) -> None:
         self.slug:str = slug
         self.name:str = None
+        self.type:str = 'team'
         self.id: int = 0
         self.html_url:str =  None
         self.description:str = None
@@ -175,6 +178,7 @@ class TeamObject:
             self.slug: {
                 "name": str(self.name),
                 "description": str(self.description),
+                "type": str(self.type),
                 "html_url": str(self.html_url),
                 "id": int(self.id),
                 "parent_id": int(self.parent_id),
@@ -200,6 +204,7 @@ class OrgObject:
         self.members_list = set()
         self.outside_collaborators = set()
         self.invitations = set()
+        self.type: str = 'org'
 
     def add_member(self, login)-> None:
         self.members_list.add(login)
@@ -231,6 +236,7 @@ class OrgObject:
             self.login: {
                 "name": str(self.name),
                 "description": str(self.description),
+                "type": str(self.type),
                 "members": list(self.members_list),
                 "collaborators": list(self.outside_collaborators),
                 "pending_invites": list(self.invitations)
