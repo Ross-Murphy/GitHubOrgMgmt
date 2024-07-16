@@ -22,8 +22,9 @@ pip install pygithub, pyyaml, argparse
 ***A Python virtual environment is recommended.***
 
 ```
-python discovery.py --help
-usage: discovery.py [-h] [-r REPO] [-t TEAMSLUG] [-o ORG] [-a {print,write}] [-f FILE] [-c]
+# python discovery.py --help
+
+usage: discovery.py [-h] [-r REPO] [-t TEAMSLUG] [-o ORG] [-f [FILE]] [-c] [-m]
 
 Crawls a GitHub Organizations repositories and gets their collaborators and team access as yaml
 
@@ -33,10 +34,10 @@ optional arguments:
   -t TEAMSLUG, --teamslug TEAMSLUG
                         Name slug of GitHub Team to inspect. Use "--team all" for all teams.
   -o ORG, --org ORG     Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME
-  -a {print,write}, --action {print,write}
-                        print yaml to stdout or write to a file specified
-  -f FILE, --file FILE  File name to write yaml output
-  -c, --complete        Complete. Crawl commits to discover who has commited to repo on any branch
+  -f [FILE], --file [FILE]
+                        File name to write yaml output
+  -c, --complete        Complete. Used with --repo. Crawl commits to discover who has commited to repo on any branch
+  -m, --members         output list of Organization Members. Only org members can belong to a team
 ```
 
 ### Sample usage and output
@@ -101,6 +102,11 @@ team-awesome: # team slug name
   - AwesomeTeamDev
   - SomeoneElseAwesome
 ```
+Discover Organization Membership
+the -m flag can be added to output the Org membership broken down by Members, Collaborators and pending invites
+
+`python discovery.py -m`
+
 
 ### More Reading
 
