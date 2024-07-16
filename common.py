@@ -1,3 +1,4 @@
+import github.Organization
 import yaml
 import github
 
@@ -60,7 +61,7 @@ class RepoObject:
         self.teams: dict = {}
         self.contributors: set = set()
 
-    def add_contributor(self, login: str):
+    def add_contributor(self, login: str)-> None:
         ''' 
         Add github login to list of contributors.
         This value is useful only as a discovery item. Meaning it is populated by checking commits made on a branch.
@@ -68,7 +69,7 @@ class RepoObject:
         '''
         self.contributors.add(login)
 
-    def add_direct_collabs(self, login: str, role: str):
+    def add_direct_collabs(self, login: str, role: str)-> None:
         ''' Add github login to list of direct collaborators'''
         if role in self.direct_collabs.keys():
             current_direct_collabs = set(self.direct_collabs[role]) # convert list to set to avoid duplicates
@@ -78,7 +79,7 @@ class RepoObject:
             self.direct_collabs[role] = list() # Make empty list since the role set is empty so we don't need to worry about dupes
             self.direct_collabs[role].append(login)
 
-    def add_outside_collabs(self, login: str, role: str):
+    def add_outside_collabs(self, login: str, role: str)-> None:
         ''' Add github login to list of outside collaborators'''
         if role in self.outside_collabs.keys():
             current_outside_collabs = set(self.outside_collabs[role]) # convert list to set to avoid duplicates
@@ -88,7 +89,7 @@ class RepoObject:
             self.outside_collabs[role] = list() # Make empty list since the role set is empty so we don't need to worry about dupes
             self.outside_collabs[role].append(login)
 
-    def add_team(self, team_slug: str, role: str):
+    def add_team(self, team_slug: str, role: str)-> None:
         '''
         Add a team name expressed as a github slug and adds it to the list.
         '''
@@ -101,7 +102,7 @@ class RepoObject:
             self.teams[role] = list() # Make empty list since the role set is empty so we don't need to worry about dupes
             self.teams[role].append(team_slug) 
 
-    def remove_team(self, team_slug: str):
+    def remove_team(self, team_slug: str)-> None:
         '''
         Remove a team name identified as a github slug from the team on this object.
         '''
@@ -130,6 +131,7 @@ class RepoObject:
         '''
         return yaml.dump(self.get_repo_structure(), sort_keys=False, Dumper=IndentDumper)
 
+
 class TeamObject:
     '''
     Class for representing a GitHub Team membership as yaml.     
@@ -157,10 +159,10 @@ class TeamObject:
         self.members:set = set()
 
 
-    def add_member(self, login):
+    def add_member(self, login)-> None:
         self.members.add(login)
 
-    def remove_member(self, login):
+    def remove_member(self, login)-> None:
         self.members.difference(login)
 
     def get_team_structure(self) -> dict:
@@ -187,7 +189,83 @@ class TeamObject:
         return yaml.dump(self.get_team_structure(), sort_keys=False, Dumper=IndentDumper)
 
 
-def discover_team(team)-> TeamObject:
+class OrgObject:
+    '''
+    Class for representing a GitHub Org membership as Yaml
+    '''
+    def __init__(self, login) -> None:
+        self.login = login
+        self.name: str = None
+        self.description: str = None
+        self.members_list = set()
+        self.outside_collaborators = set()
+        self.invitations = set()
+
+    def add_member(self, login)-> None:
+        self.members_list.add(login)
+
+    def remove_member(self, login)-> None:
+        self.members_list.discard(login)
+
+    def add_collab(self, login)-> None:
+        self.outside_collaborators.add(login)
+
+    def remove_collab(self, login)-> None:
+        self.outside_collaborators.discard(login)
+
+    def add_invited_user(self, login)-> None: # This is pulled from GH and not something we intend to set here.
+        self.invitations.add(login)
+
+    def get_org_member_structure(self) -> dict:
+        '''
+        Returns the structure of the Organization membership as a dict of lists and str
+            self.name: {
+                "name": str(self.name),
+                "description": str(self.description),
+                "members": list(self.members_list),
+                "collaborators": list(self.outside_collaborators),
+                "pending_invites": list(self.invitations)
+            }
+        '''
+        return {
+            self.login: {
+                "name": str(self.name),
+                "description": str(self.description),
+                "members": list(self.members_list),
+                "collaborators": list(self.outside_collaborators),
+                "pending_invites": list(self.invitations)
+            }
+        }
+
+    def get_org_members_as_yaml(self) -> str:
+        '''
+        Returns Org Membership object as a yaml formated string.      
+        '''
+        return yaml.dump(self.get_org_member_structure(), sort_keys=False, Dumper=IndentDumper)
+
+def discover_org(org:github.Organization.Organization)-> OrgObject:
+    this_org = OrgObject(org.login)
+    this_org.name = org.name
+    this_org.description = org.description
+    member_list = org.get_members()
+    outside_collaborators = org.get_outside_collaborators()
+    invitations = org.invitations()
+
+    if member_list:
+        for member in member_list:
+            this_org.add_member(member.login)
+    if outside_collaborators:
+        for collab in outside_collaborators:
+            this_org.add_collab(collab.login)
+
+    if invitations:
+        for invited in invitations:
+            this_org.add_invited_user(invited.login)
+
+    return this_org
+
+
+def discover_team(team:github.Team.Team)-> TeamObject:
     this_team = TeamObject(slug=team.slug)
     this_team.name = team.name
     this_team.description = team.description
@@ -200,6 +278,7 @@ def discover_team(team)-> TeamObject:
         this_team.add_member(member.login)
 
     return this_team
+
 
 def discover_repository(repo:github.Repository.Repository, discover_contributors:bool = False) ->RepoObject:
     this_repo = RepoObject(name=repo.name)
@@ -240,3 +319,5 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
             #print(f"{user.name},{user.login}")
             this_repo.add_contributor(str(user))            
     return this_repo
+
+

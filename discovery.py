@@ -5,8 +5,7 @@ import argparse
 
 from github import Github
 from github import Auth
-# from github import GithubIntegration
-from common import discover_repository, discover_team
+from common import *
 
 ACCESS_TOKEN = os.getenv("GITHUB_PRIVATE_TOKEN") # Read GitHub Personal Access Token (PAT) as an ENV Var
 '''
@@ -24,20 +23,21 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-r','--repo', help='Name of repository to inspect. Use "--repo all" for all repos. Warning: All crawls entire ORG tree')
 parser.add_argument('-t','--teamslug', help='Name slug of GitHub Team to inspect. Use "--team all" for all teams.')
 parser.add_argument('-o','--org', help='Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME')
-#parser.add_argument('-a','--action', choices=['print', 'write'], default='print', help='print yaml to stdout or write to a file specified')
 parser.add_argument('-f','--file', nargs='?', const='stdout.yml', help='File name to write yaml output')
-parser.add_argument('-c','--complete', action="store_true",help='Complete. Crawl commits to discover who has commited to repo on any branch')
+parser.add_argument('-c','--complete', action="store_true",help='Complete. Used with --repo. Crawl commits to discover who has commited to repo on any branch')
+parser.add_argument('-m','--members', action="store_true",help='output list of Organization Members. Only org members can belong to a team')
 args = parser.parse_args()
 
 ### Setup Vars from Args
 repo_name = args.repo
 team_slug = args.teamslug
 discover_contributors = args.complete
+discover_members = args.members
+print_yaml_doc = False # Default option is print to stdout only.  --file will allow write to file.
 if args.file:
     print_yaml_doc = True
     output_file = args.file
-else:
-    print_yaml_doc = False
+
 
 if args.org:
     ORG_NAME =  args.org
@@ -56,10 +56,10 @@ if not ORG_NAME:
 # Set GitHub access token
 auth = Auth.Token(ACCESS_TOKEN)
 
-# First create a Github instance:
-# Public Web Github
+# Create GitHub Instance with Auth Token
 g = Github(auth=auth)
 
+# Start Output gathering.
 if print_yaml_doc:
     file_output = "---\n"
     print(file_output, end='')
@@ -97,6 +97,20 @@ elif team_slug:
         if print_yaml_doc:
             file_output += team_as_yaml
         print(team_as_yaml, end='')
+
+if discover_members:
+    org = g.get_organization(ORG_NAME)
+    if org:
+        this_org = discover_org(org)
+        org_yaml = this_org.get_org_members_as_yaml()
+        if print_yaml_doc:
+            file_output += org_yaml
+        print(org_yaml, end='')
+        
+    # member_list = org.get_members()
+    # outside_collaborators = org.get_outside_collaborators()
+    # invitations = org.invitations()
+
 
 if print_yaml_doc:
     f = open(output_file, "a")
