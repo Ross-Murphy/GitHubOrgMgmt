@@ -110,6 +110,22 @@ the -m flag can be added to output the Org membership broken down by Members, Co
 `python discovery.py -m`
 
 
+
+`python modify.py --help`
+```
+usage: modify.py [-h] [-o ORG] [-f FILE] [-t TEAMSLUG] [-m]
+
+Modify a GitHub Organization membership and repository permisisons using yaml input files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o ORG, --org ORG     Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME
+  -f FILE, --file FILE  Input yaml file for operation
+  -t TEAMSLUG, --teamslug TEAMSLUG
+                        Name slug of GitHub Team to modify. Use "--team all" for all teams.
+  -m, --members         Set Org memership based on yaml input file
+```
+
 ### More Reading
 
 #### Interacting with GitHub API via Python

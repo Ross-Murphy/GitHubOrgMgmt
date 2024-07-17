@@ -17,7 +17,7 @@ export GITHUB_PRIVATE_TOKEN
 
 parser = argparse.ArgumentParser(
                     prog=os.path.basename(sys.argv[0]),
-                    description='Modify a GitHub Organization membership and repository permisisons using yaml input files',
+                    description='Modify a GitHub Organization membership, team memberships and repository permisisons using yaml input files',
                     epilog='')
 
 parser.add_argument('-o','--org', help='Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME')
