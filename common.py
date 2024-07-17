@@ -339,11 +339,20 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
 
 def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, action:str, role:str = 'member')-> bool:
     '''
-    gh: Instance connected to GitHub
-    team:github.Team.Team = team object of type Github Team
-    login:str = <GitHubLogin>
-    action:str = add | del # Add or remove member from team
-    role:str = member(default) | maintainer
+    Add or remove a login from a GitHub team or change roles ie. member or maintainer.
+    ---
+    gh =  a GitHub class instance authenticated and connected to GitHub
+    team = team object of type github.Team.Team
+    login:str = <GitHubLogin>  The github login to operate with.
+    action:str = [add | del]  Add or remove member from team
+    role:str = [member(default) | maintainer]  Github roles
+
+    Example:
+    ```
+    team = gh.get_organization(ORG_NAME).get_team_by_slug(team-awesome)
+    update_team_membership(gh, team, DevDude99, 'add', 'maintainer')
+    ```
+
     '''
     try: 
         gh_user_obj = gh.get_user(login)
@@ -380,27 +389,56 @@ def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, a
         return True
     
 
-def set_team_membership_from_yaml(gh:github.Github, gh_team, input_team_membership):
+def set_team_membership_from_yaml(gh:github.Github, gh_team:github.Team.Team, input_team_membership:dict)->None:
+    '''
+    gh =  a GitHub class instance authenticated and connected to GitHub
+    team = team object of type github.Team.Team
+    gh_team = team object of type github.Team.Team 
+    input_team_membership = Team membership structure loaded from an input file
+    
+    Example of a GitHug team object
+    gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(team-awesome)
+    
+    # Sample team structure in yaml
+
+        ```yaml 
+        team-awesome:
+            name: Team Awesome
+            description: A very awesome team
+            type: team
+            html_url: https://github.com/orgs/my-org/teams/team-awesome
+            id: 654321
+            parent_id: 123456
+            parent_name: ITDept
+                members:
+                    maintainer:
+                        - TeamLead
+                        - TeamGitGuru
+                    member:
+                        - TeamMember1
+                        - TeamMember2
+        ```
+    '''
         # Poll GH to see if team exists and what changes need to be made.
     #gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
-    if gh_team: # GH returned a team with that slug
-        team_slug = gh_team.slug
-        team_struct = discover_team(gh_team) # Get current team into TeamObject structure
-        current_team_membership = team_struct.get_team_structure()[team_slug]['members'] # Get the membership structure
-        for role in current_team_membership.keys(): # Check
-            for login in current_team_membership[role]:
-                if role not in input_team_membership or login not in input_team_membership[role]: # If Role empty or member does not have that role 
-                    #print( f"must remove {login}")
-                    if update_team_membership(gh, gh_team, login, 'del'):
-                        print (f'[CHANGED] Login: {login} removed from Team: {gh_team.slug}')
-                    else:
-                        print (f'[WARNING] Something prevented removing Login: {login} from Team: {gh_team.slug}')
-        for role in input_team_membership.keys():
-            for login in input_team_membership[role]:
-                if role not in current_team_membership or login not in current_team_membership[role]: # If Role empty or member does not have that role
-                    #print(f'must add {login}')
-                    if update_team_membership(gh, gh_team, login, 'add', role=role):
-                        print (f'[CHANGED] Login: {login} added to Team: {gh_team.slug} with Role: {role}')
-                    else:
-                        print (f'[WARNING] Something prevented adding Login: {login} to Team: {gh_team.slug} with Role: {role}')                        
-    
+
+    team_slug = gh_team.slug
+    team_struct = discover_team(gh_team) # Get current team into TeamObject structure
+    current_team_membership = team_struct.get_team_structure()[team_slug]['members'] # Get the membership structure
+    for role in current_team_membership.keys(): # Check
+        for login in current_team_membership[role]:
+            if role not in input_team_membership or login not in input_team_membership[role]: # If Role empty or member does not have that role 
+                #print( f"must remove {login}")
+                if update_team_membership(gh, gh_team, login, 'del'):
+                    print (f'[CHANGED] Login: {login} removed from Team: {gh_team.slug}')
+                else:
+                    print (f'[WARNING] Something prevented removing Login: {login} from Team: {gh_team.slug}')
+    for role in input_team_membership.keys():
+        for login in input_team_membership[role]:
+            if role not in current_team_membership or login not in current_team_membership[role]: # If Role empty or member does not have that role
+                #print(f'must add {login}')
+                if update_team_membership(gh, gh_team, login, 'add', role=role):
+                    print (f'[CHANGED] Login: {login} added to Team: {gh_team.slug} with Role: {role}')
+                else:
+                    print (f'[WARNING] Something prevented adding Login: {login} to Team: {gh_team.slug} with Role: {role}')                        
+
