@@ -337,3 +337,44 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
     return this_repo
 
 
+def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, action:str, role:str = 'member')-> bool:
+    '''
+    gh: Instance connected to GitHub
+    team:github.Team.Team = team object of type Github Team
+    login:str = <GitHubLogin>
+    action:str = add | del # Add or remove member from team
+    role:str = member(default) | maintainer
+    '''
+    try: 
+        gh_user_obj = gh.get_user(login)
+    except github.GithubException as err:
+        print(err) 
+        print(f"Error: GitHub login not found: {login}")           
+        return False
+    
+    if not gh_user_obj: # Something else happend that returned 'None' for user but did not throw an exception
+        print(f"Warning: GitHub login not found: {login}")           
+        return False
+    
+    if action == 'add':
+        try: 
+            if team.has_in_members(gh_user_obj) and ( team.get_team_membership(gh_user_obj) ).role == role:
+                #print(f"Debug: {gh_user_obj.login} has role {role} in team {team.name}")
+                return True
+            else:
+                # add member
+                team.add_membership(gh_user_obj, role)
+                return True
+        except github.GithubException as err:
+            print(err) 
+            print(f"GitHub Error: Returned when checking team role or adding login: {login} to role: {role} in team: {team.name}")           
+            return False
+        
+    elif action == 'del':
+        try:
+            team.remove_membership(gh_user_obj)
+        except github.GithubException as err:
+            print(err)
+            print(f"GitHub Error: Returned when removing login: {login} from team: {team.name}")                       
+            return False
+        return True
