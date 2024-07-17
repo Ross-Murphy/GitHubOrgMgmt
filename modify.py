@@ -50,7 +50,7 @@ team_slug = args.teamslug
 auth = Auth.Token(ACCESS_TOKEN)
 
 # Create GitHub Instance with Auth Token
-g = Github(auth=auth)
+gh = Github(auth=auth)
 
 
 def get_yaml_from_file(file_name)->dict:
@@ -71,40 +71,14 @@ if team_slug and team_slug == 'all': # arg --team all
     pass
 
 elif team_slug: # arg --team teamslug  
-    change_needed = False
+    
     try: # Try Load proposed team from yaml
-        input_team = input_data[team_slug]
+        input_team_membership = input_data[team_slug]['members']
     except KeyError:
         print(f"Fatal Error: Team Slug '{team_slug}' not found in dict loaded from yaml input file '{input_file}'"  )
         exit()
-    # Poll GH to see if team exists and what changes need to be made.
-   
-    gh_team = g.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
-    if gh_team: # GH returned a team with that slug
-        gh_team = discover_team(gh_team) # Get it into structure
-        current_team = gh_team.get_team_structure()[team_slug]
+    gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
+    set_team_membership_from_yaml(gh, gh_team, input_team_membership)
 
-    if(input_team['members'] != current_team['members']):
-        change_needed = True
-        members_apply = set(input_team['members']) 
-        members_remove = set() 
-        for member in current_team['members']:
-            if member not in input_team['members']:
-                members_remove.add(member)
-            
-        print('set membership')             
-        print(members_apply)
-
-        print("revoke membership")
-        print(members_remove)
-
-        
-
-    else:
-        print(current_team['members'])
-        print(input_team['members'])
-
-
-    
 # Close github connections after use
-g.close()
+gh.close()
