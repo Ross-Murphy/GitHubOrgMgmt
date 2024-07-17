@@ -378,3 +378,29 @@ def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, a
             print(f"GitHub Error: Returned when removing login: {login} from team: {team.name}")                       
             return False
         return True
+    
+
+def set_team_membership_from_yaml(gh:github.Github, gh_team, input_team_membership):
+        # Poll GH to see if team exists and what changes need to be made.
+    #gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
+    if gh_team: # GH returned a team with that slug
+        team_slug = gh_team.slug
+        team_struct = discover_team(gh_team) # Get current team into TeamObject structure
+        current_team_membership = team_struct.get_team_structure()[team_slug]['members'] # Get the membership structure
+        for role in current_team_membership.keys(): # Check
+            for login in current_team_membership[role]:
+                if role not in input_team_membership or login not in input_team_membership[role]: # If Role empty or member does not have that role 
+                    #print( f"must remove {login}")
+                    if update_team_membership(gh, gh_team, login, 'del'):
+                        print (f'[CHANGED] Login: {login} removed from Team: {gh_team.slug}')
+                    else:
+                        print (f'[WARNING] Something prevented removing Login: {login} from Team: {gh_team.slug}')
+        for role in input_team_membership.keys():
+            for login in input_team_membership[role]:
+                if role not in current_team_membership or login not in current_team_membership[role]: # If Role empty or member does not have that role
+                    #print(f'must add {login}')
+                    if update_team_membership(gh, gh_team, login, 'add', role=role):
+                        print (f'[CHANGED] Login: {login} added to Team: {gh_team.slug} with Role: {role}')
+                    else:
+                        print (f'[WARNING] Something prevented adding Login: {login} to Team: {gh_team.slug} with Role: {role}')                        
+    
