@@ -57,7 +57,7 @@ if not ORG_NAME: # Assert ORG_NAME is set
 auth = Auth.Token(ACCESS_TOKEN)
 
 # Create GitHub Instance with Auth Token
-g = Github(auth=auth)
+gh = Github(auth=auth)
 
 # Start Output gathering.
 if print_yaml_doc: # If we are dumping to a file prepend with the yaml doc string ---
@@ -65,7 +65,7 @@ if print_yaml_doc: # If we are dumping to a file prepend with the yaml doc strin
     print(file_output, end='')
 
 if repo_name and repo_name == 'all': # arg --repo all
-    for repo in g.get_organization(ORG_NAME).get_repos(type='all', sort='pushed'):
+    for repo in gh.get_organization(ORG_NAME).get_repos(type='all', sort='pushed'):
         this_repo = discover_repository(repo, discover_contributors)
         repo_as_yaml = this_repo.get_repo_as_yaml()
         if print_yaml_doc:
@@ -73,7 +73,7 @@ if repo_name and repo_name == 'all': # arg --repo all
         print(this_repo.get_repo_as_yaml(), end='') # end = '' because Yaml linters get fussy about newlines. 
         # They want a file to end with exactly 1 and the yaml.dump already has one
 elif repo_name: # arg --repo RepoName
-    repo = g.get_organization(ORG_NAME).get_repo(name=repo_name)
+    repo = gh.get_organization(ORG_NAME).get_repo(name=repo_name)
     if repo:
         this_repo = discover_repository(repo, discover_contributors)
         repo_as_yaml = this_repo.get_repo_as_yaml()
@@ -82,7 +82,7 @@ elif repo_name: # arg --repo RepoName
         print(repo_as_yaml, end='')
 
 if team_slug and team_slug == 'all': # arg --team all
-    for team in g.get_organization(ORG_NAME).get_teams():
+    for team in gh.get_organization(ORG_NAME).get_teams():
         this_team = discover_team(team)
         team_as_yaml = this_team.get_team_as_yaml()
         if print_yaml_doc:
@@ -90,7 +90,7 @@ if team_slug and team_slug == 'all': # arg --team all
         print(team_as_yaml, end='')
 
 elif team_slug: # arg --team teamslug
-    team = g.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
+    team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
     if team:
         this_team = discover_team(team)
         team_as_yaml = this_team.get_team_as_yaml()
@@ -99,7 +99,7 @@ elif team_slug: # arg --team teamslug
         print(team_as_yaml, end='')
 
 if discover_members: # arg -m was called. Get Og Membership Structure.
-    org = g.get_organization(ORG_NAME)
+    org = gh.get_organization(ORG_NAME)
     if org:
         this_org = discover_org(org)
         org_yaml = this_org.get_org_members_as_yaml()
@@ -115,4 +115,4 @@ if print_yaml_doc:
 
 
 # To close connections after use
-g.close()
+gh.close()
