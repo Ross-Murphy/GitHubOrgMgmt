@@ -296,7 +296,7 @@ def discover_team(team:github.Team.Team)-> TeamObject:
     return this_team
 
 
-def discover_repository(repo:github.Repository.Repository, discover_contributors:bool = False) ->RepoObject:
+def discover_repository(repo:github.Repository.Repository, discover_contributors:bool = False, branch:str=None) ->RepoObject:
     this_repo = RepoObject(name=repo.name)
     this_repo.html_url = repo.html_url
     # Add list of direct collaborators and their role
@@ -325,15 +325,25 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
             this_repo.add_team(team.slug, 'read')
 
     if discover_contributors: # Complete discovery was requested
-        branches = repo.get_branches()
         authors = set()
-        for branch in branches:
-            commits = repo.get_commits(sha=branch.name)
-            for commit in commits:
-                authors.add(commit.author.login)
-        for user in authors:
-            #print(f"{user.name},{user.login}")
-            this_repo.add_contributor(str(user))            
+        if not branch:
+            #branches = [repo.get_branch(repo.default_branch)]
+            contribs = repo.get_contributors() # Save a few hundred API calls by using builtin get_contributors method if default branch requested
+            for author in contribs:
+                this_repo.add_contributor(str(author.login)) 
+        else:    
+            if branch == 'all': # Get all branches and commits. API rate limit can be hit here. Improvement required
+                branches = repo.get_branches()           
+            elif branch:
+                branches = [repo.get_branch(branch)]    
+            
+            for branch in branches:
+                commits = repo.get_commits(sha=branch.name)
+                for commit in commits:
+                    authors.add(commit.author.login)
+            for user in authors:
+                #print(f"{user.name},{user.login}")
+                this_repo.add_contributor(str(user))            
     return this_repo
 
 

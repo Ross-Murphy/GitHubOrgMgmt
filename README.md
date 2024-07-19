@@ -36,7 +36,7 @@ optional arguments:
   -o ORG, --org ORG     Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME
   -f [FILE], --file [FILE]
                         File name to write yaml output
-  -c, --complete        Complete. Used with --repo. Crawl commits to discover who has commited to repo on any branch
+  -c, --complete        Complete. Used with --repo. Crawl repo branches to discover who's commited. Warning: May trigger Rate Limit
   -m, --members         output list of Organization Members. Only org members can belong to a team
 ```
 

@@ -18,21 +18,27 @@ export GITHUB_PRIVATE_TOKEN
 parser = argparse.ArgumentParser(
                     prog=os.path.basename(sys.argv[0]),
                     description='Crawls a GitHub Organizations repositories and gets their collaborators and team access as yaml',
-                    epilog='')
+                    epilog='Be aware of GitHub Rate Limits API calls per hour.\
+                        Default is 5000 for Authenticated Users.\
+                        https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api')
 
 parser.add_argument('-r','--repo', help='Name of repository to inspect. Use "--repo all" for all repos. Warning: All crawls entire ORG tree')
 parser.add_argument('-t','--teamslug', help='Name slug of GitHub Team to inspect. Use "--team all" for all teams.')
 parser.add_argument('-o','--org', help='Name of GitHub Organization. Can be read from ENV var GITHUB_ORG_NAME')
 parser.add_argument('-f','--file', nargs='?', const='stdout.yml', help='File name to write yaml output')
-parser.add_argument('-c','--complete', action="store_true",help='Complete. Used with --repo. Crawl commits to discover who has commited to repo on any branch')
+parser.add_argument('-c','--contributors', action="store_true",help='Complete. \
+                    Used with --repo. Check who has commited to default branch or -b to specify branch')
+parser.add_argument('-b','--branch', help='Used with --repo and --contributors. \
+                    Crawl commits to discover who has commited to repo on a certain branch. Use "all" for all branches')
 parser.add_argument('-m','--members', action="store_true",help='output list of Organization Members. Only org members can belong to a team')
 args = parser.parse_args()
 
 ### Setup Vars from Args
 repo_name = args.repo
 team_slug = args.teamslug
-discover_contributors = args.complete
+discover_contributors = args.contributors
 discover_members = args.members
+branch = args.branch
 print_yaml_doc = False # Default option is print to stdout only.  --file will allow write to file.
 
 if args.file: # We have set file output to true with --file
@@ -58,6 +64,9 @@ auth = Auth.Token(ACCESS_TOKEN)
 
 # Create GitHub Instance with Auth Token
 gh = Github(auth=auth)
+# Set github pagination setting.
+gh.per_page = 100 # Default is 30 results per page. 100 Saves API calls by about a 2/3 (in testing 316 vs 120)
+#rate = gh.get_rate_limit()
 
 # Start Output gathering.
 if print_yaml_doc: # If we are dumping to a file prepend with the yaml doc string ---
@@ -75,7 +84,7 @@ if repo_name and repo_name == 'all': # arg --repo all
 elif repo_name: # arg --repo RepoName
     repo = gh.get_organization(ORG_NAME).get_repo(name=repo_name)
     if repo:
-        this_repo = discover_repository(repo, discover_contributors)
+        this_repo = discover_repository(repo, discover_contributors, branch)
         repo_as_yaml = this_repo.get_repo_as_yaml()
         if print_yaml_doc:
             file_output += repo_as_yaml                
@@ -113,6 +122,8 @@ if print_yaml_doc:
     f.write(file_output)
     f.close()
 
+rate = gh.get_rate_limit()
+print(rate)
 
 # To close connections after use
 gh.close()
