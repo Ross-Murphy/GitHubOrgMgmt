@@ -65,20 +65,57 @@ if input_file:
         print(err)
         exit()
    
-
-#Process Teams 
-if team_slug and team_slug == 'all': # arg --team all
-    pass
-
-elif team_slug: # arg --team teamslug  
-    
+def process_team_memberships(input_data:dict, team_slug:str)->None:
     try: # Try Load proposed team from yaml
         input_team_membership = input_data[team_slug]['members']
     except KeyError:
-        print(f"Fatal Error: Team Slug '{team_slug}' not found in dict loaded from yaml input file '{input_file}'"  )
+        print(f"Fatal Error: Team Slug '{team_slug}' or members not found in dict loaded from yaml input file '{input_file}'"  )
         exit()
-    gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
-    set_team_membership_from_yaml(gh, gh_team, input_team_membership)
+    # Validate team data that we're loading from yaml
+    if 'type' in input_data[team_slug].keys() and input_data[team_slug]['type'] == 'team':     
+        gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
+        set_team_membership_from_yaml(gh, gh_team, input_team_membership)
+    else: 
+        print(f"Fatal Error: Team loaded '{team_slug}' does not have type=team in yaml input file '{input_file}'" )
+        print("Verify input data is a valid team structure." )
+        exit()
+
+def update_team_description(input_data:dict, team_slug:str)->None:
+    try:
+        gh_team = gh.get_organization(ORG_NAME).get_team_by_slug(slug=team_slug)
+    except github.GithubException as ex:
+        template = "An GitHub exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print (message)
+        return
+
+    try:
+        new_description = input_data[team_slug]['description']
+        old_description = gh_team.description
+        if old_description != new_description:
+            gh_team.edit(name= gh_team.name, description=new_description)
+            print(f'[CHANGED] Updated team description Team: {gh_team.slug}')
+
+    except KeyError:
+        print("[UNCHANGED][WARNING] Team Description field not found in imported team structure.")
+        return
+
+    except github.GithubException as ex:
+        template = "An GitHub exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print (message)
+        return
+
+#Process Teams 
+if team_slug and team_slug == 'all': # arg --team all
+   for team_slug, team_data in input_data.items():
+        update_team_description(input_data, team_slug)
+        process_team_memberships(input_data, team_slug)
+        
+elif team_slug: # arg --team teamslug
+    update_team_description(input_data, team_slug)
+    process_team_memberships(input_data, team_slug)
+
 
 # Close github connections after use
 gh.close()
