@@ -1,6 +1,8 @@
 import github.Organization
+import github.Team
 import yaml
 import github
+from github.GithubException import UnknownObjectException
 
 class IndentDumper(yaml.Dumper):
     '''
@@ -256,6 +258,7 @@ class OrgObject:
         '''
         return yaml.dump(self.get_org_member_structure(), sort_keys=False, Dumper=IndentDumper)
 
+
 def discover_org(org:github.Organization.Organization)-> OrgObject:
     this_org = OrgObject(org.login)
     this_org.name = org.name
@@ -347,6 +350,39 @@ def discover_repository(repo:github.Repository.Repository, discover_contributors
     return this_repo
 
 
+def github_team_exists(org:github.Organization, team_slug:str)-> bool:
+    try:
+        team = org.get_team_by_slug(team_slug)
+        return True
+    except UnknownObjectException as ex:
+        return False
+
+
+def get_github_team_by_name(org:github.Organization, team_name:str)-> github.Team.Team:
+    teams_list = org.get_teams()
+    for team in teams_list:
+        if team.name == team_name:
+            return team
+    return None    
+
+
+def create_github_team(org:github.Organization, team_name:str, description:str = None, parent_team_id:int = 0, privacy:str = 'closed' )-> github.Team.Team:
+    team = get_github_team_by_name(org=org, team_name=team_name)
+    if team:
+        #print (f'[WARNING] Team Exists but creation requested. Action Taken is None. Team Slug: {team.slug}')
+        return team   
+    else:
+        if parent_team_id > 0:
+            team = org.create_team(name= team_name, description=description, parent_team_id=parent_team_id, privacy=privacy)
+        else: 
+            team = org.create_team(name= team_name, description=description, privacy=privacy)         
+    if team:
+        print (f'[CHANGED] Created Team {team_name} - GitHub Team Slug: {team.slug}')
+        return team
+    else:
+        return None
+    
+
 def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, action:str, role:str = 'member')-> bool:
     '''
     Add or remove a login from a GitHub team or change roles ie. member or maintainer.
@@ -397,10 +433,13 @@ def update_team_membership(gh:github.Github, team:github.Team.Team, login:str, a
             print(f"GitHub Error: Returned when removing login: {login} from team: {team.name}")                       
             return False
         return True
-    
+
 
 def set_team_membership_from_yaml(gh:github.Github, gh_team:github.Team.Team, input_team_membership:dict)->None:
     '''
+    Modify a GitHub Team membership based on a structure loaded from a YAML input file.
+    The GitHub team object is an input to this function so it is assumed to exist in GitHub.
+
     gh =  a GitHub class instance authenticated and connected to GitHub
     team = team object of type github.Team.Team
     gh_team = team object of type github.Team.Team 
@@ -451,4 +490,5 @@ def set_team_membership_from_yaml(gh:github.Github, gh_team:github.Team.Team, in
                     print (f'[CHANGED] Login: {login} added to Team: {gh_team.slug} with Role: {role}')
                 else:
                     print (f'[WARNING] Something prevented adding Login: {login} to Team: {gh_team.slug} with Role: {role}')                        
+
 
