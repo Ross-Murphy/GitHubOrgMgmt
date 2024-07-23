@@ -10,6 +10,7 @@ Python Modules required.
 ---
 
 PyGithub - https://pypi.org/project/PyGithub/
+PyGithub Docs : https://pygithub.readthedocs.io/en/stable/reference.html
 
 PyYaml - https://pypi.org/project/PyYAML/
 
@@ -17,7 +18,24 @@ argparse - https://docs.python.org/3/library/argparse.html
 
 **How to install.** 
 ```shell
+# clone the repo
+git clone https://github.com/Ross-Murphy/GitHubOrgMgmt.git
+
+# create virtual env
+python3 -m venv .venv
+
+# activate venv
+source .venv/bin/activate
+
+# Update pip
+python3 -m pip install --upgrade pip
+
+# Install requirements
+python3 -m pip install -r requirements.txt
+
+#  or manually per package
 pip install pygithub, pyyaml, argparse
+
 ```
 ***A Python virtual environment is recommended.***
 
@@ -128,6 +146,5 @@ optional arguments:
 
 ### More Reading
 
-#### Interacting with GitHub API via Python
-PyGithub Docs : https://pygithub.readthedocs.io/en/stable/reference.html
+
 
