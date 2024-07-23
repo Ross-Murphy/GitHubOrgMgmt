@@ -122,8 +122,8 @@ if print_yaml_doc:
     f.write(file_output)
     f.close()
 
-rate = gh.get_rate_limit()
-print(rate)
+# rate = gh.get_rate_limit()
+# print(rate)
 
 # To close connections after use
 gh.close()
