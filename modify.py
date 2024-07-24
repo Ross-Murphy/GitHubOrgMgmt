@@ -5,6 +5,7 @@ import argparse
 
 from github import Github
 from github import Auth
+from github.GithubException import *
 from common import *
 
 ACCESS_TOKEN = os.getenv("GITHUB_PRIVATE_TOKEN") # Read GitHub Personal Access Token (PAT) as an ENV Var
@@ -43,6 +44,7 @@ if not ORG_NAME: # Assert ORG_NAME is set
 
 input_file = args.file
 team_slug = args.teamslug
+org_members = args.members
 
 ### End Var setup
 
@@ -57,6 +59,7 @@ def get_yaml_from_file(file_name)->dict:
     with open(file_name, 'r') as file:
         input_data = yaml.safe_load(file)
     return input_data
+
 
 if input_file:
     try:
@@ -79,6 +82,7 @@ def process_team_memberships(input_data:dict, team_slug:str)->None:
         print(f"Fatal Error: Team loaded '{team_slug}' does not have type=team in yaml input file '{input_file}'" )
         print("Verify input data is a valid team structure." )
         exit()
+
 
 def update_team_description(input_data:dict, team_slug:str)->None:
     try:
@@ -106,6 +110,19 @@ def update_team_description(input_data:dict, team_slug:str)->None:
         print (message)
         return
 
+
+def process_org_memberships(gh:github.Github, input_data:dict, org_name:str=ORG_NAME):
+    try:
+        org = gh.get_organization(org_name)
+    except UnknownObjectException as ex:
+        template = "A GitHub exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print (message)
+        return False        
+    else:
+        set_org_membership_from_yaml(gh, org, input_data)   
+
+
 #Process Teams 
 if team_slug and team_slug == 'all': # arg --team all
    for team_slug, team_data in input_data.items():
@@ -116,6 +133,10 @@ elif team_slug: # arg --team teamslug
     update_team_description(input_data, team_slug)
     process_team_memberships(input_data, team_slug)
 
-
+# Process Org Memberships
+if org_members: # arg -m or --members
+   process_org_memberships(gh, input_data, ORG_NAME)
+   
+    
 # Close github connections after use
 gh.close()

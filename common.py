@@ -281,6 +281,13 @@ def discover_org(org:github.Organization.Organization)-> OrgObject:
     return this_org
 
 
+def convert_org_member_to_collab( org:github.Organization, login:str)->None:
+    members = org.get_members()
+    for member in members:
+        if member.login == login:
+            org.convert_to_outside_collaborator(member)
+
+
 def discover_team(team:github.Team.Team)-> TeamObject:
     this_team = TeamObject(slug=team.slug)
     this_team.name = team.name
@@ -492,3 +499,82 @@ def set_team_membership_from_yaml(gh:github.Github, gh_team:github.Team.Team, in
                     print (f'[WARNING] Something prevented adding Login: {login} to Team: {gh_team.slug} with Role: {role}')                        
 
 
+def set_org_membership_from_yaml(gh:github.Github, org:github.Organization, input_org:dict)->None:
+    '''
+    Modify a Github Organizaiton membership based on dict input.
+    '''
+    # Poll github and compare current membership with desired membership loaded from yaml file.
+    ## Current Org Obj is what is currently configured in GitHub
+    current_org_obj = discover_org(org).get_org_member_structure()[org.login]
+    current_org_members:list = current_org_obj['members']
+    current_org_collabs:list = current_org_obj['collaborators']
+    current_org_pending_invites:list = current_org_obj['pending_invites']
+
+    ## Imported Org Obj is what is imported from Yaml
+    imported_org_obj = input_org[org.login]
+    imported_org_members:list = imported_org_obj['members']
+    imported_org_collaborators:list = imported_org_obj['collaborators']
+
+    ## Ensure imported member is in either current members list or pending_invites.
+    for org_member in imported_org_members:
+        # If imported org member is not current a member but is already invited skip them and advise user.
+        if org_member not in current_org_members and org_member in current_org_pending_invites:
+            print(f'[UNCHANGED] Login: {org_member} has pending invite to GitHub Org: {org.login}') 
+            continue
+        # If imported org member is not yet an org member and has no pending invite, 
+        if org_member not in current_org_members and org_member not in current_org_pending_invites:
+            # invite the member to the org
+            try:
+                user_obj = gh.get_user(login=org_member) # Get the NamedUser obj
+                org.add_to_members(member=user_obj, role='member')
+                print(f'[CHANGED] Login: {org_member} was invited to GitHub Org: {org.login}')
+            except UnknownObjectException as ex:
+                print(f'[UNCHANGED] GitHub reports the provided login: {org_member} was not found in GitHub')
+                continue    
+            
+
+    ## Check imported collaborators list against current org membership
+    for collab in imported_org_collaborators:
+        # if collab is in current collab list and not in org members, they're good, skip them
+        if collab in current_org_collabs and collab not in current_org_members:
+            continue
+        # if imported collaborator is currently an org member, convert to outside collaborator
+        if collab in current_org_members and collab not in imported_org_members:
+            try:
+                user_obj = gh.get_user(login=collab) # Get the NamedUser obj
+                org.convert_to_outside_collaborator(user_obj)
+                print(f'[CHANGED] Login: {collab} was converted to outside collaborator for GitHub Org: {org.login}')
+            except UnknownObjectException as ex:
+                print(f'[UNCHANGED] GitHub reports the provided login: {org_member} was not found')
+                continue
+        # If the collab is not in the current collaborators warn the user.
+        # if collab not in current_org_collabs and collab not in imported_org_members :
+        #     print(f'[WARNING] Login: {collab} is listed in import data but not found in Org collaborators. Is your import data up-to-date and correct?')
+
+    ## Check current org membership and remove from org those missing in the import.
+    for org_member in current_org_members:
+        # If a current org member is not in the list of imported org members, remove them from the org
+        if org_member not in imported_org_members and org_member not in imported_org_collaborators :
+            try:
+                user_obj = gh.get_user(login=org_member) # Get the NamedUser obj
+                #TESTING# org.remove_from_membership(user_obj)
+                print(f'[CHANGED] Login: {org_member} was removed from GitHub Org: {org.login}')    
+            except UnknownObjectException as ex: # Handle case where user account been deleted or is no longer an Org Member
+                # Debugging code here: This may serve as a feeding a loging function later.
+                # template = "A GitHub exception of type {0} occurred. Arguments:\n{1!r}"
+                # message = template.format(type(ex).__name__, ex.args)
+                # print (message)
+                print(f'[UNCHANGED] GitHub reports the provided login: {org_member} was not found in GitHub or in Org')
+                continue    
+    # Check current collaborators and remove those missing from import
+    for collab in current_org_collabs:
+        # remove outside collaborators no longer listed in import as org members or collabs.
+        # Removing a user from this list will remove them from all the organization's repositories.
+        if collab not in imported_org_collaborators and collab not in imported_org_members:
+            try:
+                user_obj = gh.get_user(login=collab) # Get the NamedUser obj
+                org.remove_outside_collaborator(user_obj)
+                print(f'[CHANGED] Login: {collab} was removed as Outside Collaborator from GitHub Org: {org.login}') 
+            except UnknownObjectException as ex:  
+                print(f'[UNCHANGED] GitHub reports the provided login: {org_member} was not found in GitHub')
+                continue
