@@ -39,6 +39,8 @@ pip install pygithub, pyyaml, argparse
 ```
 ***A Python virtual environment is recommended.***
 
+### Discover Organization membership and repository access
+
 ```
 # python discovery.py --help
 
@@ -59,12 +61,14 @@ optional arguments:
 ```
 
 ### Sample usage and output
+#### Setup
 ```
 # Setup your org and GitHub PAT
+source set_token.sh
 GitHub Organization Name:our-org
 GitHub Access Token:****************************
 
-# run discovery
+# run discovery of a repo
 python discovery.py -r AwesomeRepo
 ```
 Output
@@ -100,7 +104,8 @@ AwesomeRepo: # Name of Repository
 
  ```
 
-Discover team
+Discover teams
+---
 `python discovery.py -t team-awesome`
 
 Output
@@ -122,12 +127,12 @@ team-awesome: # team slug name
       - AwesomeTeamDev
       - SomeoneElseAwesome
 ```
-Discover Organization Membership
+
 the -m flag can be added to output the Org membership broken down by Members, Collaborators and pending invites
 
 `python discovery.py -m`
 
-
+### Modify Org Memberships and repo permissions
 
 `python modify.py --help`
 ```
@@ -146,5 +151,9 @@ optional arguments:
 
 ### More Reading
 
+#### PyGithub
+https://github.com/PyGithub/PyGithub
+https://pygithub.readthedocs.io/en/stable/reference.html
 
-
+#### Github API Docs
+https://docs.github.com/en/rest?

@@ -560,7 +560,7 @@ def set_org_membership_from_yaml(gh:github.Github, org:github.Organization, inpu
                 #TESTING# org.remove_from_membership(user_obj)
                 print(f'[CHANGED] Login: {org_member} was removed from GitHub Org: {org.login}')    
             except UnknownObjectException as ex: # Handle case where user account been deleted or is no longer an Org Member
-                # Debugging code here: This may serve as a feeding a loging function later.
+                # Debugging code here: This may serve as feeding a loging function later.
                 # template = "A GitHub exception of type {0} occurred. Arguments:\n{1!r}"
                 # message = template.format(type(ex).__name__, ex.args)
                 # print (message)
