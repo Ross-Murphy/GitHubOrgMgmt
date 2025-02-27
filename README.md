@@ -6,6 +6,10 @@ Code used for managing a GitHub Organization
 To authenticate with GitHub you will need a Personal Access Token (aka PAT).
 Read More: [GitHub Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
 
+Tokens should have the following least priv access rights:
+Suggested rights:
+`admin:org_hook, public_repo, read:audit_log, read:enterprise, read:gpg_key, read:user, repo:invite, repo:status, repo_deployment, user:email, write:org, write:repo_hook`
+
 Python Modules required.
 ---
 
@@ -69,7 +73,7 @@ GitHub Organization Name:our-org
 GitHub Access Token:****************************
 
 # run discovery of a repo
-python discovery.py -r AwesomeRepo
+python3 discovery.py -r AwesomeRepo
 ```
 Output
 ```yaml
@@ -106,7 +110,7 @@ AwesomeRepo: # Name of Repository
 
 Discover teams
 ---
-`python discovery.py -t team-awesome`
+`python3 discovery.py -t team-awesome`
 
 Output
 ```yaml
